@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+    <link rel="stylesheet" href="css/pageQuizzGame.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Quizz Game</title>
+</head>
+<body>
+
+    <div class="mainContainer">
+        <div class="QuizzInfoAndStatsBox"></div>
+        <div class="QuestionAnswerBox">
+            <div class="QuestionBox">
+                <p id="QuestionNumber"></p>
+                <p id="QuestionText" class="white-text">
+                </p>
+            </div>
+            <div id="AnswersBox" class="AnswersBox">
+                
+            </div>
+        </div>
+        <div class="PrevAndNextBox">
+            <a id="btnPrecedent" class="waves-effect waves-light btn indigo darken-3">Precedent</a>
+            <a id="btnSuivant" class="waves-effect waves-light btn indigo darken-3">Suivant</a>
+            <a href="#modal1" id="btnCorrigerQuiz" class="waves-effect green waves-light btn  modal-trigger btn-large yellow lighten-2 indigo-text text-darken-3">CORRIGER QUIZ</a>
+        </div>
+    </div>
+
+  <!-- Modal Structure -->
+  <div id="modal1" class="modal">
+    <div class="modal-content">
+      <h4>Score</h4>
+      <p id="containerScore"></p>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">OK</a>
+    </div>
+  </div>
+
+  <!--Imports and Configurations-->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsRAkdi-7_3LzNXYbX1k08TCzBuvtGgY0",
+      authDomain: "quizgameflora.firebaseapp.com",
+      projectId: "quizgameflora",
+      storageBucket: "quizgameflora.appspot.com",
+      messagingSenderId: "134553191876",
+      appId: "1:134553191876:web:3b1ab48b5b3da0f3751091"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+    import {getDatabase,ref,set,get,child,update,remove} from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+    const db = getDatabase();
+    function fetchQuizQuestionsFromDB(){
+        showLoaderIn(containerQuestionText);
+      //load de quizzId from locasStorage
+      let selectedQuizzId = localStorage.getItem(SELECTED_QUIZZ_KEY);
+        const dbref = ref(db);
+        get(child(dbref,selectedQuizzId)).then((snapshot)=>{
+        if(snapshot.exists()){
+          var res = snapshot.val();
+          var questions = res["questions"];
+          console.log(questions);
+          let i=1;
+          console.log(questions["question"+i] != undefined);
+          quiz = loadQuizz(questions);
+          console.log(quiz);
+          displayQuestion(quiz.presentNextQuestion());
+        }else{
+          console.log("does not exist")
+        }
+      });
+    }
+    
+
+    //Declarer les variables d'acces au DOM
+var containerQuestionNumber;
+var containerQuestionText;
+var answersBox;
+var containerScore;
+
+var btnPrecedent;
+var btnSuivant;
+var btnCorrigerQuiz;
+
+var quiz;
+var quizAnswers = [];
+var quizScore
+const SELECTED_QUIZZ_KEY = "selectedQuizzKey";
+const DEFAULT_OPTION_BG_COLOR = "";
+const CHOSEN_OPTION_BG_COLOR = "#b2ff59";
+
+
+
+
+
+//Declaration des structures de Donnees
+class QuizzProgress{
+    constructor(questions){
+        this.quizQuestions = questions;
+        this.currentQuestionNumber = -1;
+        this.currentAnswers = [];
+        this.initializeAnswers();
+        
+    }
+    initializeAnswers(){
+        for(let i=0;i<this.quizQuestions.length;i++){
+            this.currentAnswers[i] = "X";
+        }
+    }
+    isQuizFinished(){
+        if(this.currentQuestionNumber + 1 == this.quizQuestions.length){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    presentNextQuestion(){
+        if(this.isQuizFinished()){
+            console.log("quiz is finished");
+           return null;
+        }else{
+            this.currentQuestionNumber+=1;
+            console.log(quiz);
+            return this.quizQuestions[this.currentQuestionNumber];
+        }
+        
+    }
+    presentPreviousQuestion(){
+        if(this.currentQuestionNumber>0){
+            this.currentQuestionNumber-=1;
+            return this.quizQuestions[this.currentQuestionNumber];
+        }else{
+            return null;
+        }
+        
+    }
+    standardizeAnswersArray(){
+        //
+    }
+    
+}
+class QuizzQuestion{
+    constructor(qNumber,qText,qOptions,qId,){
+        this.questionNumber = qNumber;
+        this.questionText = qText;
+        this.questionOptions = qOptions;
+        this.questionId = qId;
+       
+    }
+}
+
+class QuestionOption{
+    constructor(oLetter,oText,oId,qNumber){
+        this.optionLetter = oLetter;
+        this.optionText = oText;
+        this.optionId = oId;
+        this.optionQuestionNumber = qNumber;
+    }
+}
+
+
+
+//initialiser les variables
+
+containerQuestionNumber = document.getElementById("QuestionNumber");
+containerQuestionText = document.getElementById("QuestionText");
+answersBox = document.getElementById("AnswersBox");
+containerScore = document.getElementById("containerScore");
+
+btnPrecedent = document.getElementById("btnPrecedent");
+btnSuivant = document.getElementById("btnSuivant");
+btnCorrigerQuiz = document.getElementById("btnCorrigerQuiz");
+
+
+//gestion des evenements
+btnSuivant.onclick = function(e){
+    let q = quiz.presentNextQuestion();
+    if(q == null){
+        //quiz is finish present results
+    }else{
+        displayQuestion(q);
+    }
+}
+btnPrecedent.onclick = function(e){
+    let q = quiz.presentPreviousQuestion();
+    if(q == null){
+        //already at first
+    }else{
+        displayQuestion(q);
+    }
+    
+}
+// btnCorrigerQuiz.onclick = function(e){
+    
+// }
+
+//Declaration des fonctions
+
+function loadQuizz(questions){
+    btnCorrigerQuiz.style.visibility = "hidden";
+    
+    
+    //fetch quizz questions from BD
+   
+    let i=1;
+    var Allquestions = [];
+    while(questions["question"+i] != undefined){
+      let qOptions = questions["question"+i].options;
+      let qText = questions["question"+i].questionText;
+      let qanswer = questions["question"+i].answer;
+
+      let opts = [];
+      let j=1;
+      while(qOptions["option"+j] != undefined){
+         let optLetter = qOptions["option"+j].optionLetter;
+         let optValue = qOptions["option"+j].optionText;
+         opts[j-1] = new QuestionOption(optLetter,optValue,i+""+optLetter,i);
+
+         if(qanswer == "option"+j){
+            quizAnswers[i-1] = optLetter
+          }
+          j++;
+      }
+      Allquestions[i-1] = new QuizzQuestion(i,qText,opts,"q"+i);
+      console.log(Allquestions[i]);
+      i++;
+    }
+   
+
+    
+    return new QuizzProgress(Allquestions);
+}
+
+//afficher question courante
+function displayQuestion(question){
+    console.log(question);
+    if(question instanceof QuizzQuestion){
+        
+        //display question number
+        containerQuestionNumber.innerHTML = `<span class="yellow-text text-lighten-2"> Question ${question.questionNumber} / ${quiz.quizQuestions.length} </span>`;
+        //display question text
+        containerQuestionText.innerHTML = `${question.questionText}`;
+        //loading answer options
+        answersBox.innerHTML = "";
+        for(let i=0;i<question.questionOptions.length;i++){
+            displayQuestionOption(question.questionOptions[i]);
+        }
+        //check whether to ungrey submit btn
+        if(quiz.currentQuestionNumber == (quiz.currentAnswers.length - 1)){
+            btnCorrigerQuiz.style.visibility = "visible";
+        }else{
+            console.log("not yet final");
+            btnCorrigerQuiz.style.visibility = "hidden";
+        }
+        //highlight alraedy chosen answer
+        if( quiz.currentAnswers[quiz.currentQuestionNumber] != "X"){
+            console.log(quiz.currentAnswers[quiz.currentQuestionNumber]);
+            let el2 = document.getElementById(quiz.currentAnswers[quiz.currentQuestionNumber]);
+            el2.style.backgroundColor = CHOSEN_OPTION_BG_COLOR;
+        }
+        //add Event listeners to each option
+        for(let i=0;i<question.questionOptions.length;i++){
+           let el = document.getElementById(question.questionOptions[i].optionId);
+           el.onclick = function(e){
+            console.log(quiz);
+                el.style.backgroundColor = CHOSEN_OPTION_BG_COLOR;
+                if( quiz.currentAnswers[quiz.currentQuestionNumber] != "X"){
+                    let el2 = document.getElementById(quiz.currentAnswers[quiz.currentQuestionNumber]);
+                    el2.style.backgroundColor = DEFAULT_OPTION_BG_COLOR;
+                }
+                if(quiz.currentAnswers[quiz.currentQuestionNumber] == e.target.id){
+                    quiz.currentAnswers[quiz.currentQuestionNumber] = "X";
+                }else{
+                    quiz.currentAnswers[quiz.currentQuestionNumber] = e.target.id;
+                }
+                
+                console.log(quiz);
+           }
+        }
+    }else{
+        console.log("trying to display something not a question");
+    }
+}
+
+//afficher option de reponse
+function displayQuestionOption(option){
+    answersBox.innerHTML+=`
+        <div class="AnswerOption" id="${option.optionId}">
+            <div class="letterIcon yellow-text text-lighten-2">${option.optionLetter}</div>
+            <div class="AnswerText white-text"> ${option.optionText}</div>
+        </div>`;
+}
+function showLoaderIn(element){
+    element.innerHTML = `
+    <div class="preloader-wrapper big active">
+      <div class="spinner-layer spinner-blue">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-red">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-yellow">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-green">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+    </div>
+    `;
+}
+//materialize init
+let options = {
+    onCloseEnd: function(){
+       location.href = "index.html"
+    },
+    onOpenEnd: function(){
+        console.log("--------------------FINAL STATE----------------------");
+        console.log(quiz);
+        let score = 0;
+        console.log(quizAnswers);
+        for(let i=0;i<quizAnswers.length;i++){
+            if(quiz.currentAnswers[i].charAt(quiz.currentAnswers[i].length - 1) == quizAnswers[i]){
+                score++;
+            }
+        }
+        containerScore.innerHTML = `Votre Score est ${score}/${quizAnswers.length}`;
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var elems = document.querySelectorAll('.modal');
+    var instances = M.Modal.init(elems, options);
+  });
+//--------------------------------------------------START------------------------------------------------------------------
+fetchQuizQuestionsFromDB();
+
+  </script>
+    <script type="text/javascript" src="/javascript/materialize.min.js"></script>
+    <script src="/javascript/pageQuizzGame.js"></script>
+</body>
+</html>

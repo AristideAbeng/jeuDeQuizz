@@ -1,0 +1,145 @@
+.mainContainer{
+ 
+    width: 100%;
+    height: 100vh;
+}
+@font-face {
+    font-family:Montserrat;
+    src: url(../Montserrat-VariableFont_wght.ttf);
+  }
+.ThemeListPage{
+    
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
+    background-image:url(../images/chooseatheme.png);
+    background-repeat: no-repeat;
+}
+.flexThemeList{
+    height: 60%;
+    width: 90%;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: center;
+    
+}
+.ThemeListElementView{
+    color: blue;
+    width: 10%;
+    height: 10%;
+    border: 1px solid blue;
+    border-radius: 5%;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+    margin:10px;
+    font-family: Montserrat;
+    flex-basis:80px;
+}
+.ThemeListElementView:hover{
+    color: white;
+    background-color: blue;
+    width: 10%;
+    height: 10%;
+    border: 1px solid blue;
+    border-radius: 5%;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.PlayBtn{
+    margin: 50%;
+    margin-top: 30%;
+    margin-left: 10%;
+}
+.QuizListPage{
+width: 100%;
+height: 100%;
+display: flex;
+flex-flow: column nowrap;
+font-family: Montserrat;
+}
+.QuizzesUnderThemeList{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width:100%;
+
+}
+.flexQuizzList{
+    width: 80%;
+}
+.QuizElement{
+    margin-bottom: 5px;
+    padding: 10px;
+}
+.themeTitle{
+    width: 100%;
+    font-style: bold;
+    font-weight: 600;
+    font-size: 24sp;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+    
+}
+
+@media only screen and (min-width: 900px) {
+    .WelcomePage{
+        width: 100%;
+        height: 100%;
+        background-image:url(../images/acceuil.png);
+        background-repeat: no-repeat;
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
+    }
+  }
+  @media only screen and (max-width: 768px) {
+    .WelcomePage{
+        width: 100%;
+        height: 100%;
+        background-image:url(../images/aceuillsmallsmallsmall.png);
+        background-repeat: no-repeat;
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
+    }
+  }
+  @media only screen and (max-width: 900px) {
+    /* For desktop: */
+    .WelcomePage{
+        width: 100%;
+        height: 100%;
+        background-image:url(../images/acceuilsmallreal.png);
+        background-repeat: no-repeat;
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
+    }
+  }
+  @media only screen and (max-width: 300px) {
+    /* For desktop: */
+    .WelcomePage{
+        width: 100%;
+        height: 100%;
+        background-image:url(../images/acceuil4ss.png);
+        background-repeat: no-repeat;
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
+    }
+  }

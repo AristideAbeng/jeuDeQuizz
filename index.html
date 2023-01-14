@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+     <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
+     <script src='https://cdn.firebase.com/js/client/2.2.1/firebase.js'></script>
+     <link rel="stylesheet" href="css/pagePrinciale.css">
+     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizzGame</title>
+</head>
+<body>
+    <div class="mainContainer" class="">
+        <div id="WelcomePage" class="WelcomePage">
+            <a id="btnPlay"class="PlayBtn waves-effect waves-light btn-large yellow lighten-2 indigo-text text-darken-3">play</a>
+        </div>
+        <div id="ThemeListPage" class="ThemeListPage">
+            
+            <div id="ThemeList" class="flexThemeList">
+                
+            </div>
+        </div>
+        <div id="QuizListPage" class="QuizListPage">
+          <div class="themeTitle" id="selectedTheme"></div>
+            <div id="QuizzesUnderThemeList" class="QuizzesUnderThemeList">
+                <ul id="QuizzList" class="flexQuizzList">
+                  
+              </ul>
+          </div>
+        </div>
+       
+    </div>
+    
+    <!--Imports and Configurations-->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsRAkdi-7_3LzNXYbX1k08TCzBuvtGgY0",
+      authDomain: "quizgameflora.firebaseapp.com",
+      projectId: "quizgameflora",
+      storageBucket: "quizgameflora.appspot.com",
+      messagingSenderId: "134553191876",
+      appId: "1:134553191876:web:3b1ab48b5b3da0f3751091"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+    import {getDatabase,ref,set,get,child,update,remove} from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+    const db = getDatabase();
+    function fetchThemesFromDB(){
+        const dbref = ref(db);
+        get(child(dbref,"Themes")).then((snapshot)=>{
+        if(snapshot.exists()){
+        containerThemeList.innerHTML = "";
+          var res = snapshot.val();
+          console.log(res);
+         let allThemes = loadAllThemes(res);
+         presentAllThemes(allThemes);
+          //console.log(quiz);
+          //displayQuestion(quiz.presentNextQuestion());
+        }else{
+          console.log("does not exist")
+        }
+      });
+    }
+    function fetchQuizzesUnderTheme(theme){
+        const dbref = ref(db);
+        get(child(dbref,theme)).then((snapshot)=>{
+        if(snapshot.exists()){
+          var res = snapshot.val();
+          console.log(res);
+          let quizzes = loadAllQuizzesUnderTheme(theme,res);
+          console.log(quizzes);
+          presentAllQuizes(quizzes,theme);
+          
+        }else{
+          console.log("does not exist")
+        }
+      });
+    }
+
+    //Declarer les variables d'access au DOM
+var containerThemeListPage;
+var containerQuizListPage
+var containerPageDacceuil;
+
+var containerThemeList;
+var containerQuizThemeList;
+
+var BtnPlay;
+var BtnCreerQuiz;
+var SelectedThemeContainer;
+const SELECTED_QUIZZ_KEY = "selectedQuizzKey";
+
+class ThemeQuiz {
+    constructor(label,id){
+        this.label = label;
+        this.id = id;
+    }
+
+    getId(){
+        return this.id;
+    }
+}
+
+class QuizzGeneralInfo{
+    constructor(theme,name,duration,author,quizId){
+        this.theme = theme;
+        this.name = name;
+        this.duration = duration;
+        this.author = author;
+        this.quizId = quizId;
+    }
+}
+
+//initialiser ces variables du DOM
+containerThemeListPage = document.getElementById("ThemeListPage");
+containerQuizListPage = document.getElementById("QuizListPage");
+containerPageDacceuil = document.getElementById("WelcomePage");
+
+containerQuizThemeList = document.getElementById("QuizzList");
+containerThemeList = document.getElementById("ThemeList");
+SelectedThemeContainer = document.getElementById("selectedTheme");
+
+BtnPlay = document.getElementById("btnPlay");
+
+//chargerTous les themes lorsqu'on clique sur BtnPlay
+function loadAllThemes(dbThemes){
+    //faire des appels a la base de donnees firebase
+    console.log(dbThemes);
+    let i=1;
+    let themes = [];
+    while(dbThemes["theme"+i] != undefined){
+      let val = dbThemes["theme"+i];
+      console.log(val);
+      themes[i-1] = new ThemeQuiz(val,"id"+val);
+      i++
+    } 
+    return themes;
+}
+
+function loadAllQuizzesUnderTheme(theme,res){
+    //faire des appels a la BD
+    SelectedThemeContainer.innerHTML = `<h2 class="indigo-text text-darken-3">${theme}</h2>`;
+    let quizzes = [];
+    let i=0;
+    while(res["quizz"+i] != undefined){
+      quizzes[i]= new QuizzGeneralInfo(theme,res["quizz"+i].description,res["quizz"+i].timeLimit,res["quizz"+i].author,"quizz"+i)
+    i++;
+    }
+    return quizzes;
+}
+
+function presentAllQuizes(allQuizzes,theme){
+   
+    showScene(3);
+    for(let i=0;i<allQuizzes.length;i++){
+        displayQuizListElement(allQuizzes[i]);
+    }
+    for(let i=0;i<allQuizzes.length;i++){
+        let element = allQuizzes[i];
+        let btn = document.getElementById("btn"+element.quizId);
+        btn.onclick = function(e){
+            
+            localStorage.setItem(SELECTED_QUIZZ_KEY,theme+"/"+element.quizId);
+            location.href = "quizzGamePage.html";
+        }
+    }
+    
+}
+
+function displayQuizListElement(element){
+ containerQuizThemeList.innerHTML+= `
+ <li class="card collection-item avatar QuizElement yellow lighten-4" id="${element.quizId}">
+                      <i class="material-icons circle yellow lighten-2">verified_user</i>
+                      <span class="title indigo-text text-darken-3">${element.name}</span>
+                      <p class="indigo-text text-darken-3">${element.duration} minutes <br>
+                         Proposed By ${element.author}
+                      </p>
+                      <a id="${"btn"+element.quizId}" class="waves-effect waves-light btn yellow lighten-2 indigo-text text-darken-3"><span>play Quiz</span></a>
+                  </li>
+ `;
+}
+function showLoaderIn(element){
+    element.innerHTML = `
+    <div class="preloader-wrapper big active">
+      <div class="spinner-layer spinner-blue">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-red">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-yellow">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer spinner-green">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+    </div>
+    `;
+}
+
+//inserer tous les themes dans la page html
+function presentAllThemes(allThemes){
+    //console.log("presenting all themes")
+    for(let i=0;i<allThemes.length;i++){
+        displayThemeListElement(allThemes[i]);
+    }
+    for(let i=0;i<allThemes.length;i++){
+        let currentTheme = document.getElementById(allThemes[i].id);
+        console.log(currentTheme);
+        if(currentTheme){
+            currentTheme.onclick = function(e){
+                console.log(e);
+                let theme = e.srcElement.id;
+                console.log(theme);
+                theme = theme.substring(2);
+                console.log(theme);
+                fetchQuizzesUnderTheme(theme);
+            }
+        }
+        //console.log(currentTheme.onclick);
+    }
+}
+//inserer un theme dans la page html
+function displayThemeListElement(e){
+    containerThemeList.innerHTML+=`
+        <div id="${e.id}" class="ThemeListElementView">
+            ${e.label}
+        </div>
+    `;
+    //console.log(containerThemeList);
+}
+
+function showScene(number){
+    hideAllScenes();
+
+    if(number == 1){
+        containerPageDacceuil.style.display = "block";
+        //containerPageDacceuil.style.display = "flex";
+    }else if(number == 2){
+        containerThemeListPage.style.display = "block";
+        containerThemeListPage.style.display = "flex";
+    }else{
+        containerQuizListPage.style.display = "block";
+        containerQuizListPage.style.display = "flex";
+    }
+}
+function hideAllScenes(){
+    containerPageDacceuil.style.display = "none";
+    containerThemeListPage.style.display = "none";
+    containerQuizListPage.style.display = "none";
+}
+//gestion des evenements
+
+BtnPlay.onclick = function(){
+    showScene(2);
+    showLoaderIn(containerThemeList);
+    fetchThemesFromDB();
+}
+
+//---------------------------------------------------Start--------------------------------------------------------------------------
+showScene(1);
+
+
+    </script>
+      <script type="text/javascript" src="/javascript/materialize.min.js"></script>
+      <script src="/javascript/pagePrincipale.js"></script>
+</body>
+</html>
